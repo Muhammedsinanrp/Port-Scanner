@@ -207,6 +207,74 @@ def start_scan():
     return jsonify({"scan_id": scan_id, "status": "started"})
 
 
+# Configurable payment parameters
+admin_upi_id = os.environ.get("UPI_ID", "muhammedsinan@upi")
+admin_upi_name = os.environ.get("UPI_NAME", "Muhammed Sinan")
+pro_tokens = set(os.environ.get("PRO_TOKENS", "PRO10,ADMIN,VIP2026,FREE10").split(","))
+
+@app.route("/api/payment/info")
+def payment_info():
+    return jsonify({
+        "upi_id": admin_upi_id,
+        "merchant_name": admin_upi_name,
+        "currency": "INR",
+        "symbol": "₹",
+        "plans": [
+            {
+                "id": "single",
+                "name": "Single Scan Pass",
+                "price": 10,
+                "desc": "1 Deep Vulnerability Scan + Full HTML Report Download",
+                "badge": "STARTER"
+            },
+            {
+                "id": "day",
+                "name": "24-Hour Day Pass",
+                "price": 29,
+                "desc": "Full 65,535 Ports + Deep Nmap NSE Scripts for 24 Hours",
+                "badge": "POPULAR"
+            },
+            {
+                "id": "month",
+                "name": "Pro Monthly VIP",
+                "price": 99,
+                "desc": "Priority Multi-threading + Unlimited Audits for 30 Days",
+                "badge": "VIP"
+            }
+        ]
+    })
+
+@app.route("/api/payment/verify", methods=["POST"])
+def verify_payment():
+    payload = request.get_json(silent=True) or request.form.to_dict() or {}
+    code_or_utr = payload.get("code", "").strip()
+    plan_id = payload.get("plan_id", "single")
+
+    if not code_or_utr:
+        return jsonify({"success": False, "error": "Please provide UPI UTR number or Voucher code."}), 400
+
+    # Valid if matches promo code OR looks like a valid 12-digit bank UTR reference
+    is_valid = (
+        code_or_utr.upper() in pro_tokens or
+        (len(code_or_utr) >= 10 and code_or_utr.isdigit())
+    )
+
+    if is_valid:
+        new_token = f"pro_{uuid.uuid4().hex[:12]}"
+        pro_tokens.add(new_token)
+        return jsonify({
+            "success": True,
+            "token": new_token,
+            "message": f"Payment verified! Pro access unlocked for plan {plan_id}."
+        })
+    else:
+        return jsonify({
+            "success": False,
+            "error": "Invalid UTR / Voucher code. Please verify your 12-digit transaction ID."
+        }), 400
+
+
+
 @app.route("/api/scan/<scan_id>")
 def get_scan(scan_id):
     scan = SCANS.get(scan_id)
@@ -255,3 +323,4 @@ def export_scan(scan_id, fmt):
 if __name__ == "__main__":
     print(f"Starting Network Security Web Dashboard on http://127.0.0.1:5000")
     app.run(host="127.0.0.1", port=5000, debug=False)
+

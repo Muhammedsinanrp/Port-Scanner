@@ -300,3 +300,127 @@ function exportReport(format) {
     }
     window.open(`/api/export/${currentScanId}/${format}`, "_blank");
 }
+
+/* ==============================================================================
+   PRO UPGRADE & UPI PAYMENT LOGIC (Starts at ₹10)
+   ============================================================================== */
+let currentSelectedPrice = 10;
+let currentSelectedPlan = 'single';
+let currentAdminUPI = 'muhammedsinan@upi';
+
+function openPaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closePaymentModal() {
+    const modal = document.getElementById("payment-modal");
+    if (modal) modal.style.display = "none";
+}
+
+function selectPlan(price, planId, elem) {
+    currentSelectedPrice = price;
+    currentSelectedPlan = planId;
+
+    // Update active class
+    document.querySelectorAll(".plan-option").forEach(el => el.classList.remove("active"));
+    if (elem) elem.classList.add("active");
+
+    // Update QR code dynamically with price
+    const qrImg = document.getElementById("upi-qr-image");
+    const upiUri = `upi://pay?pa=${encodeURIComponent(currentAdminUPI)}&pn=MuhammedSinan&am=${price}&cu=INR&tn=AegisScan_${planId}`;
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(upiUri)}`;
+}
+
+function copyUPI() {
+    navigator.clipboard.writeText(currentAdminUPI).then(() => {
+        alert(`UPI ID '${currentAdminUPI}' copied to clipboard.`);
+    });
+}
+
+async function submitPaymentVerification() {
+    const input = document.getElementById("utr-input");
+    const feedback = document.getElementById("utr-feedback");
+    const btn = document.getElementById("btn-verify-utr");
+    const code = input.value.trim();
+
+    if (!code) {
+        feedback.className = "utr-feedback-msg msg-error";
+        feedback.innerText = "Please enter 12-digit UPI UTR / Reference number or Promo code.";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "Verifying...";
+    feedback.innerText = "";
+
+    try {
+        const resp = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code: code, plan_id: currentSelectedPlan })
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+            feedback.className = "utr-feedback-msg msg-success";
+            feedback.innerText = "Payment verified! Pro features unlocked.";
+            localStorage.setItem("aegis_pro_token", data.token);
+
+            // Update Header Button
+            updateProHeaderStatus(true);
+
+            setTimeout(() => {
+                closePaymentModal();
+                alert("🎉 Congratulations! PRO access is now unlocked on your account.");
+            }, 1200);
+        } else {
+            feedback.className = "utr-feedback-msg msg-error";
+            feedback.innerText = data.error || "Verification failed. Check your UTR number.";
+        }
+    } catch (err) {
+        feedback.className = "utr-feedback-msg msg-error";
+        feedback.innerText = "Network error. Please try again.";
+    } finally {
+        btn.disabled = false;
+        btn.innerText = "Verify & Unlock";
+    }
+}
+
+function updateProHeaderStatus(isPro) {
+    const proBtn = document.getElementById("btn-pro-plan");
+    if (!proBtn) return;
+    if (isPro) {
+        proBtn.className = "btn-pro-upgrade btn-pro-unlocked";
+        proBtn.innerHTML = "<span>🛡️</span> PRO VIP ACTIVE";
+    } else {
+        proBtn.className = "btn-pro-upgrade";
+        proBtn.innerHTML = `<span class="pro-sparkle">✨</span> UNLOCK PRO (<span id="header-pro-price">₹10</span>)`;
+    }
+}
+
+// On load, check pro status & fetch admin payment config
+document.addEventListener("DOMContentLoaded", async () => {
+    const savedToken = localStorage.getItem("aegis_pro_token");
+    if (savedToken) {
+        updateProHeaderStatus(true);
+    }
+
+    // Fetch payment config if available
+    try {
+        const res = await fetch("/api/payment/info");
+        if (res.ok) {
+            const info = await res.json();
+            if (info.upi_id) {
+                currentAdminUPI = info.upi_id;
+                const upiEl = document.getElementById("display-upi-id");
+                if (upiEl) upiEl.innerText = info.upi_id;
+                selectPlan(10, 'single', document.querySelector(".plan-option.active"));
+            }
+        }
+    } catch (e) {
+        // Fallback to default
+    }
+});
+

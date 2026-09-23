@@ -28,6 +28,9 @@
         </div>
 
         <div class="header-right">
+            <button type="button" id="btn-pro-plan" class="btn-pro-upgrade" onclick="openPaymentModal()">
+                <span class="pro-sparkle">✨</span> UNLOCK PRO (<span id="header-pro-price">₹10</span>)
+            </button>
             <div class="engine-badge" id="nmap-badge">
                 <span class="status-dot {{ 'dot-green' if nmap_available else 'dot-yellow' }}"></span>
                 <span>Nmap Engine: <strong>{{ 'Ready (v7.80)' if nmap_available else 'Not Found' }}</strong></span>
@@ -216,6 +219,69 @@
                 </div>
             </div>
         </section>
+        <!-- Payment & UPI Paywall Modal (Starts at ₹10) -->
+        <div id="payment-modal" class="modal-backdrop" style="display: none;">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <div class="modal-title-group">
+                        <h3>⚡ UNLOCK PRO RECON SCANNER</h3>
+                        <span class="modal-sub">Starting at just ₹10 via UPI (Google Pay, PhonePe, Paytm, BHIM)</span>
+                    </div>
+                    <button type="button" class="btn-close-modal" onclick="closePaymentModal()">&times;</button>
+                </div>
+
+                <div class="plans-selector">
+                    <div class="plan-option active" onclick="selectPlan(10, 'single', this)">
+                        <div class="plan-badge">STARTER</div>
+                        <div class="plan-price">₹10</div>
+                        <div class="plan-name">Single Deep Scan</div>
+                        <div class="plan-desc">Full CVE Vuln Scan + Report Download</div>
+                    </div>
+                    <div class="plan-option" onclick="selectPlan(29, 'day', this)">
+                        <div class="plan-badge badge-pop">POPULAR</div>
+                        <div class="plan-price">₹29</div>
+                        <div class="plan-name">24-Hour Pass</div>
+                        <div class="plan-desc">Unlimited 65k Port Scans for 24h</div>
+                    </div>
+                    <div class="plan-option" onclick="selectPlan(99, 'month', this)">
+                        <div class="plan-badge badge-vip">VIP</div>
+                        <div class="plan-price">₹99</div>
+                        <div class="plan-name">Pro Monthly</div>
+                        <div class="plan-desc">30 Days Priority Audits</div>
+                    </div>
+                </div>
+
+                <div class="qr-payment-box">
+                    <div class="qr-code-wrap">
+                        <img id="upi-qr-image" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=muhammedsinan@upi%26pn=MuhammedSinan%26am=10%26cu=INR" alt="Scan to Pay ₹10">
+                        <div class="qr-scan-label">SCAN WITH ANY UPI APP</div>
+                    </div>
+
+                    <div class="upi-instructions">
+                        <div class="upi-id-row">
+                            <span class="label-text">UPI ID:</span>
+                            <code id="display-upi-id">muhammedsinan@upi</code>
+                            <button type="button" class="btn-copy-upi" onclick="copyUPI()">Copy</button>
+                        </div>
+                        <div class="upi-apps-icons">
+                            <span class="upi-chip">Google Pay</span>
+                            <span class="upi-chip">PhonePe</span>
+                            <span class="upi-chip">Paytm</span>
+                            <span class="upi-chip">BHIM</span>
+                        </div>
+
+                        <div class="utr-input-group">
+                            <label for="utr-input">Enter 12-Digit UPI Ref / UTR / Promo Code:</label>
+                            <div class="utr-submit-row">
+                                <input type="text" id="utr-input" placeholder="e.g. 423589123456 or PRO10" maxlength="20">
+                                <button type="button" id="btn-verify-utr" class="btn-verify-pay" onclick="submitPaymentVerification()">Verify & Unlock</button>
+                            </div>
+                            <span id="utr-feedback" class="utr-feedback-msg"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <footer class="app-footer">

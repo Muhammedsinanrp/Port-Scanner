@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: aegisscan-network
+    env: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/status
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: UPI_ID
+        value: muhammedsinan@upi
+      - key: UPI_NAME
+        value: Muhammed Sinan
