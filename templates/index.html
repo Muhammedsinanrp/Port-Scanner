@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AegisScan - Network Reconnaissance & Port Scanner</title>
+    <meta name="description" content="Next-generation multi-engine network port scanner and vulnerability assessment dashboard powered by Asyncio and Nmap.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="glow-bg"></div>
+
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-box">
+                <span class="logo-icon">⚡</span>
+                <div>
+                    <h1 class="logo-title">AEGIS<span class="gradient-text">SCAN</span></h1>
+                    <span class="logo-sub">Multi-Engine Security Scanner</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="engine-badge" id="nmap-badge">
+                <span class="status-dot {{ 'dot-green' if nmap_available else 'dot-yellow' }}"></span>
+                <span>Nmap Engine: <strong>{{ 'Ready (v7.80)' if nmap_available else 'Not Found' }}</strong></span>
+            </div>
+            <div class="engine-badge">
+                <span class="status-dot dot-green"></span>
+                <span>Async Engine: <strong>Active</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Target & Configuration Panel -->
+        <section class="card config-card">
+            <div class="card-header">
+                <h2>🎯 Target Configuration</h2>
+                <div class="presets-row">
+                    <span class="preset-label">Quick Presets:</span>
+                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', 'top-100', 'fast')">Localhost (Top 100)</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', 'top-100', 'fast')">scanme.nmap.org</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', '80,443,3000,5000,8080', 'fast')">Dev Web Ports</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', '22,80,9929', 'vuln')">Nmap Vuln Scan</button>
+                </div>
+            </div>
+
+            <form id="scan-form" class="scan-form" onsubmit="event.preventDefault(); startScan();">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="target-input">Target Host / IP</label>
+                        <input type="text" id="target-input" placeholder="e.g. 127.0.0.1 or scanme.nmap.org" required value="127.0.0.1">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="ports-input">Ports Specification</label>
+                        <input type="text" id="ports-input" placeholder="top-100, 1-1024, 80,443,8080" value="top-100">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="mode-select">Scanning Engine</label>
+                        <select id="mode-select">
+                            <option value="fast" selected>🚀 Ultra-Fast Async Connect (Native)</option>
+                            <option value="nmap">🔍 Nmap Deep Service & Version (-sV)</option>
+                            <option value="vuln">⚠️ Nmap NSE Vulnerability Scripts (--script vuln)</option>
+                            <option value="all">⚡ Hybrid Deep Recon (Async + Nmap + SSL + Web)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group submit-group">
+                        <button type="submit" id="btn-start" class="btn-primary">
+                            <span class="btn-icon">⚡</span> Launch Scan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- Live Scan Progress Bar -->
+        <section id="progress-section" class="card progress-card" style="display: none;">
+            <div class="progress-info">
+                <div class="progress-status" id="progress-status-text">Scanning target...</div>
+                <div class="progress-pct" id="progress-pct-text">0%</div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar-fill"></div>
+            </div>
+        </section>
+
+        <!-- Metric Stat Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="stat-open-ports">0</div>
+                <div class="metric-label">Open Ports</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value text-danger" id="stat-vulns">0</div>
+                <div class="metric-label">Security Alerts</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value text-info" id="stat-latency">—</div>
+                <div class="metric-label">Host Latency</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value text-purple" id="stat-duration">0.0s</div>
+                <div class="metric-label">Scan Duration</div>
+            </div>
+        </div>
+
+        <!-- Export Bar -->
+        <div id="export-bar" class="export-bar" style="display: none;">
+            <span class="export-label">Export Scan Report:</span>
+            <div class="export-buttons">
+                <button type="button" class="btn-export" onclick="exportReport('html')">📄 Standalone HTML</button>
+                <button type="button" class="btn-export" onclick="exportReport('json')">📦 JSON Data</button>
+                <button type="button" class="btn-export" onclick="exportReport('csv')">📊 CSV Spreadsheet</button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs for Results -->
+        <div class="tabs-nav">
+            <button type="button" class="tab-btn active" onclick="switchTab('ports')">🔌 Open Ports (<span id="tab-ports-count">0</span>)</button>
+            <button type="button" class="tab-btn" onclick="switchTab('vulns')">⚠️ Vulnerabilities (<span id="tab-vulns-count">0</span>)</button>
+            <button type="button" class="tab-btn" onclick="switchTab('recon')">🌐 Recon & SSL Info</button>
+            <button type="button" class="tab-btn" onclick="switchTab('logs')">📜 Live Console Logs</button>
+        </div>
+
+        <!-- Tab 1: Ports Table -->
+        <section id="tab-ports" class="tab-content active">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="ports-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 110px;">Port</th>
+                                <th style="width: 100px;">State</th>
+                                <th style="width: 170px;">Service</th>
+                                <th>Banner / Fingerprint</th>
+                                <th style="width: 120px;">Latency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ports-tbody">
+                            <tr>
+                                <td colspan="5" class="empty-state">No scan running. Configure target and click Launch Scan above.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 2: Vulnerabilities -->
+        <section id="tab-vulns" class="tab-content">
+            <div class="card" id="vulns-container">
+                <div class="empty-state">No security findings recorded yet.</div>
+            </div>
+        </section>
+
+        <!-- Tab 3: Recon & SSL -->
+        <section id="tab-recon" class="tab-content">
+            <div class="recon-grid">
+                <div class="card">
+                    <h3>📡 DNS & Network Intelligence</h3>
+                    <div id="dns-info-box" class="recon-details">
+                        <p class="text-muted">Will populate once a scan is executed.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🔒 SSL/TLS Certificate Analysis</h3>
+                    <div id="ssl-info-box" class="recon-details">
+                        <p class="text-muted">SSL cert information (for HTTPS ports) appears here.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🌐 Web Server & Headers</h3>
+                    <div id="http-info-box" class="recon-details">
+                        <p class="text-muted">HTTP headers and web application fingerprinting details.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tab 4: Live Console Logs -->
+        <section id="tab-logs" class="tab-content">
+            <div class="card console-card">
+                <div class="console-header">
+                    <span>TERMINAL STREAM</span>
+                    <button type="button" class="btn-clear" onclick="clearLogs()">Clear</button>
+                </div>
+                <div class="console-terminal" id="terminal-logs">
+                    <div class="log-line"><span class="log-tag">[SYSTEM]</span> AegisScan Engine initialized. Ready to scan.</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>AegisScan • Upgraded from <a href="https://github.com/Muhammedsinanrp/Port-Scanner" target="_blank" rel="noopener">Muhammedsinanrp/Port-Scanner</a> with Nmap & Async Multi-Engine architecture.</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

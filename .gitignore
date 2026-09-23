@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary exports and test report artifacts
+exports/
+local_*.html
+*.log
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Embedded large binaries (auto-downloaded on demand)
+bin/
+
+# IDE configurations
+.vscode/
+.idea/
+.DS_Store

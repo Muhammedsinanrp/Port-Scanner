@@ -1,33 +1,10 @@
-import socket
-from threading import Thread
+#!/usr/bin/env python3
+"""
+Port Scanner (Enhanced from Muhammedsinanrp/Port-Scanner)
+Main entrypoint for backwards compatibility.
+"""
 
-target = input("Enter target IP: ")
-ports = range(1, 1025)
+from scanner import main
 
-def scan_port(port):
-    try:
-        sock = socket.socket()
-        sock.settimeout(1)
-        sock.connect((target, port))
-        
-        try:
-            banner = sock.recv(1024).decode().strip()
-        except:
-            banner = "No banner"
-        
-        print(f"[+] Port {port} is open | Service: {banner}")
-        sock.close()
-    except:
-        pass
-
-threads = []
-
-for port in ports:
-    t = Thread(target=scan_port, args=(port,))
-    threads.append(t)
-    t.start()
-
-for t in threads:
-    t.join()
-
-print("Scan completed.")
+if __name__ == "__main__":
+    main()
