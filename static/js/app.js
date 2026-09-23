@@ -54,6 +54,11 @@ async function startScan() {
     startBtn.disabled = true;
     startBtn.innerHTML = '<span class="btn-icon">⏳</span> Scanning...';
 
+    // Engage 3D Cyber Globe Scan Animation
+    if (typeof triggerScan3DAnimation === 'function') {
+        triggerScan3DAnimation(true);
+    }
+
     // Show progress bar
     const progSec = document.getElementById("progress-section");
     progSec.style.display = "block";
@@ -128,6 +133,9 @@ async function pollScanStatus() {
         }
 
         // Render Open Ports Table
+        if (openPorts.length > 0 && typeof triggerPortDiscoveredPulse === 'function') {
+            triggerPortDiscoveredPulse();
+        }
         renderPortsTable(openPorts);
 
         // Render Vulnerabilities
@@ -148,9 +156,12 @@ async function pollScanStatus() {
         // Check if finished
         if (scan.status === "completed" || scan.status === "error") {
             clearInterval(pollInterval);
+            if (typeof triggerScan3DAnimation === 'function') {
+                triggerScan3DAnimation(false);
+            }
             const startBtn = document.getElementById("btn-start");
             startBtn.disabled = false;
-            startBtn.innerHTML = '<span class="btn-icon">⚡</span> Launch Scan';
+            startBtn.innerHTML = '<span class="btn-icon">⚡</span> Engage 3D Recon Scan';
 
             if (scan.status === "completed") {
                 document.getElementById("export-bar").style.display = "flex";

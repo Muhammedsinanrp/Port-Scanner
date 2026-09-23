@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AegisScan - Network Reconnaissance & Port Scanner</title>
-    <meta name="description" content="Next-generation multi-engine network port scanner and vulnerability assessment dashboard powered by Asyncio and Nmap.">
+    <title>AegisScan - 3D Network Reconnaissance & Port Scanner</title>
+    <meta name="description" content="Next-generation multi-engine network port scanner and vulnerability assessment dashboard with interactive 3D Cyber Globe.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Three.js for 3D Cyber Globe -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div class="glow-bg"></div>
@@ -19,8 +21,8 @@
             <div class="logo-box">
                 <span class="logo-icon">⚡</span>
                 <div>
-                    <h1 class="logo-title">AEGIS<span class="gradient-text">SCAN</span></h1>
-                    <span class="logo-sub">Multi-Engine Security Scanner</span>
+                    <h1 class="logo-title">AEGIS<span class="gradient-text">SCAN</span> <span class="badge-3d">3D</span></h1>
+                    <span class="logo-sub">Multi-Engine Security Scanner & Cyber Globe</span>
                 </div>
             </div>
         </div>
@@ -38,48 +40,62 @@
     </header>
 
     <main class="main-container">
-        <!-- Target & Configuration Panel -->
-        <section class="card config-card">
-            <div class="card-header">
-                <h2>🎯 Target Configuration</h2>
-                <div class="presets-row">
-                    <span class="preset-label">Quick Presets:</span>
-                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', 'top-100', 'fast')">Localhost (Top 100)</button>
-                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', 'top-100', 'fast')">scanme.nmap.org</button>
-                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', '80,443,3000,5000,8080', 'fast')">Dev Web Ports</button>
-                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', '22,80,9929', 'vuln')">Nmap Vuln Scan</button>
+        <!-- 3D Cyber Globe & Target Hub Hero -->
+        <section class="card hero-3d-card">
+            <div class="hero-3d-layout">
+                <!-- Left: 3D Interactive Canvas -->
+                <div class="globe-3d-wrapper">
+                    <div id="globe-3d-canvas" class="globe-canvas"></div>
+                    <div class="globe-hud-overlay">
+                        <span class="hud-pill"><span class="pulse-dot"></span> 3D CYBERSURFACE</span>
+                        <span class="hud-hint">DRAG TO ROTATE 3D MESH</span>
+                    </div>
+                </div>
+
+                <!-- Right: Scan Configuration & Presets -->
+                <div class="hero-config-column">
+                    <div class="card-header">
+                        <h2>🎯 Target Configuration</h2>
+                        <div class="presets-row">
+                            <span class="preset-label">Presets:</span>
+                            <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', 'top-100', 'fast')">Localhost</button>
+                            <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', 'top-100', 'fast')">scanme.nmap.org</button>
+                            <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', '80,443,3000,5000,8080', 'fast')">Web Stack</button>
+                            <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', '22,80,9929', 'vuln')">Nmap Vuln</button>
+                        </div>
+                    </div>
+
+                    <form id="scan-form" class="scan-form" onsubmit="event.preventDefault(); startScan();">
+                        <div class="form-grid-3d">
+                            <div class="input-group">
+                                <label for="target-input">Target Host / IP</label>
+                                <input type="text" id="target-input" placeholder="e.g. 127.0.0.1 or scanme.nmap.org" required value="127.0.0.1">
+                            </div>
+
+                            <div class="input-group">
+                                <label for="ports-input">Ports Specification</label>
+                                <input type="text" id="ports-input" placeholder="top-100, 1-1024, 80,443,8080" value="top-100">
+                            </div>
+
+                            <div class="input-group full-width">
+                                <label for="mode-select">Scanning Engine</label>
+                                <select id="mode-select">
+                                    <option value="fast" selected>🚀 Ultra-Fast Async Connect (Native)</option>
+                                    <option value="nmap">🔍 Nmap Deep Service & Version (-sV)</option>
+                                    <option value="vuln">⚠️ Nmap NSE Vulnerability Scripts (--script vuln)</option>
+                                    <option value="all">⚡ Hybrid Deep Recon (Async + Nmap + SSL + Web)</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group submit-group full-width">
+                                <button type="submit" id="btn-start" class="btn-primary btn-3d-glow">
+                                    <span class="btn-icon">⚡</span> Engage 3D Recon Scan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <form id="scan-form" class="scan-form" onsubmit="event.preventDefault(); startScan();">
-                <div class="form-grid">
-                    <div class="input-group">
-                        <label for="target-input">Target Host / IP</label>
-                        <input type="text" id="target-input" placeholder="e.g. 127.0.0.1 or scanme.nmap.org" required value="127.0.0.1">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="ports-input">Ports Specification</label>
-                        <input type="text" id="ports-input" placeholder="top-100, 1-1024, 80,443,8080" value="top-100">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="mode-select">Scanning Engine</label>
-                        <select id="mode-select">
-                            <option value="fast" selected>🚀 Ultra-Fast Async Connect (Native)</option>
-                            <option value="nmap">🔍 Nmap Deep Service & Version (-sV)</option>
-                            <option value="vuln">⚠️ Nmap NSE Vulnerability Scripts (--script vuln)</option>
-                            <option value="all">⚡ Hybrid Deep Recon (Async + Nmap + SSL + Web)</option>
-                        </select>
-                    </div>
-
-                    <div class="input-group submit-group">
-                        <button type="submit" id="btn-start" class="btn-primary">
-                            <span class="btn-icon">⚡</span> Launch Scan
-                        </button>
-                    </div>
-                </div>
-            </form>
         </section>
 
         <!-- Live Scan Progress Bar -->
@@ -95,19 +111,19 @@
 
         <!-- Metric Stat Cards -->
         <div class="metrics-grid">
-            <div class="metric-card">
+            <div class="metric-card card-3d-tilt">
                 <div class="metric-value" id="stat-open-ports">0</div>
                 <div class="metric-label">Open Ports</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card card-3d-tilt">
                 <div class="metric-value text-danger" id="stat-vulns">0</div>
                 <div class="metric-label">Security Alerts</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card card-3d-tilt">
                 <div class="metric-value text-info" id="stat-latency">—</div>
                 <div class="metric-label">Host Latency</div>
             </div>
-            <div class="metric-card">
+            <div class="metric-card card-3d-tilt">
                 <div class="metric-value text-purple" id="stat-duration">0.0s</div>
                 <div class="metric-label">Scan Duration</div>
             </div>
@@ -147,7 +163,7 @@
                         </thead>
                         <tbody id="ports-tbody">
                             <tr>
-                                <td colspan="5" class="empty-state">No scan running. Configure target and click Launch Scan above.</td>
+                                <td colspan="5" class="empty-state">No scan running. Configure target and click Engage Scan above.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -196,16 +212,17 @@
                     <button type="button" class="btn-clear" onclick="clearLogs()">Clear</button>
                 </div>
                 <div class="console-terminal" id="terminal-logs">
-                    <div class="log-line"><span class="log-tag">[SYSTEM]</span> AegisScan Engine initialized. Ready to scan.</div>
+                    <div class="log-line"><span class="log-tag">[SYSTEM]</span> AegisScan 3D Engine initialized. Ready to scan.</div>
                 </div>
             </div>
         </section>
     </main>
 
     <footer class="app-footer">
-        <p>AegisScan • Upgraded from <a href="https://github.com/Muhammedsinanrp/Port-Scanner" target="_blank" rel="noopener">Muhammedsinanrp/Port-Scanner</a> with Nmap & Async Multi-Engine architecture.</p>
+        <p>AegisScan 3D • Upgraded from <a href="https://github.com/Muhammedsinanrp/Port-Scanner" target="_blank" rel="noopener">Muhammedsinanrp/Port-Scanner</a> with 3D Cyber Globe & Nmap.</p>
     </footer>
 
+    <script src="/static/js/globe.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html>
