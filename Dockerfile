@@ -18,12 +18,9 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Copy application code
 COPY . .
 
-# Expose Web Dashboard port
+ENV PORT=5000
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/api/status || exit 1
+# Start using production Gunicorn WSGI server (supports dynamic $PORT on free cloud hosts)
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 3 --threads 4 --timeout 180 web_app:app"]
 
-# Start using production Gunicorn WSGI server
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "3", "--threads", "4", "--timeout", "180", "web_app:app"]
