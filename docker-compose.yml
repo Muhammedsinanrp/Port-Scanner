@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  aegisscan:
+    build: .
+    container_name: aegisscan_app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+    volumes:
+      - ./exports:/app/exports
