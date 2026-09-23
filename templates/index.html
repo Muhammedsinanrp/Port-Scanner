@@ -3,253 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AEGIS-X // Elite Cyber Reconnaissance & Port Security Suite</title>
-    <meta name="description" content="Next-generation cyberpunk network scanner & vulnerability assessment platform powered by Asyncio, Nmap, and heuristic threat intelligence.">
+    <title>AegisScan - Network Reconnaissance & Port Scanner</title>
+    <meta name="description" content="Next-generation multi-engine network port scanner and vulnerability assessment dashboard powered by Asyncio and Nmap.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="cyber-theme">
-    <!-- Background Matrix & Cyber Grid Canvas -->
-    <div class="cyber-grid-overlay"></div>
-    <div class="cyber-scanlines"></div>
-    <div class="ambient-glow glow-cyan"></div>
-    <div class="ambient-glow glow-magenta"></div>
+<body>
+    <div class="glow-bg"></div>
 
-    <!-- HUD Header -->
-    <header class="cyber-header">
+    <header class="app-header">
         <div class="header-left">
-            <div class="cyber-badge-logo">
-                <div class="logo-hex">
-                    <span class="logo-glyph">⬡</span>
-                    <span class="logo-inner-icon">⚡</span>
+            <div class="logo-box">
+                <span class="logo-icon">⚡</span>
+                <div>
+                    <h1 class="logo-title">AEGIS<span class="gradient-text">SCAN</span></h1>
+                    <span class="logo-sub">Multi-Engine Security Scanner</span>
                 </div>
-                <div class="logo-text-group">
-                    <div class="logo-brand">AEGIS<span class="cyber-neon-cyan">X</span> <span class="edition-tag">PRO HUD</span></div>
-                    <div class="logo-subline">TACTICAL NETWORK INTELLIGENCE & THREAT SCANNER</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="header-hud-center">
-            <div class="hud-status-node">
-                <span class="node-label">SYS_STATE</span>
-                <span class="node-val cyber-neon-green"><span class="pulse-dot"></span> OPERATIONAL</span>
-            </div>
-            <div class="hud-status-node">
-                <span class="node-label">NMAP_CORE</span>
-                <span class="node-val {{ 'cyber-neon-cyan' if nmap_available else 'cyber-neon-yellow' }}">
-                    {{ 'v7.80 ARMED' if nmap_available else 'NATIVE ONLY' }}
-                </span>
-            </div>
-            <div class="hud-status-node">
-                <span class="node-label">ASYNC_THREADS</span>
-                <span class="node-val cyber-neon-magenta">400 WORKERS</span>
             </div>
         </div>
 
         <div class="header-right">
-            <button type="button" id="audio-toggle-btn" class="cyber-hud-btn" onclick="toggleAudio()" title="Toggle Sci-Fi HUD Audio Feedback">
-                <span id="audio-icon">🔊</span> AUDIO: <span id="audio-state-text">ON</span>
-            </button>
-            <div class="defcon-pill">DEFCON <span class="defcon-num">1</span></div>
+            <div class="engine-badge" id="nmap-badge">
+                <span class="status-dot {{ 'dot-green' if nmap_available else 'dot-yellow' }}"></span>
+                <span>Nmap Engine: <strong>{{ 'Ready (v7.80)' if nmap_available else 'Not Found' }}</strong></span>
+            </div>
+            <div class="engine-badge">
+                <span class="status-dot dot-green"></span>
+                <span>Async Engine: <strong>Active</strong></span>
+            </div>
         </div>
     </header>
 
-    <main class="main-cyber-frame">
-        <!-- Target Configuration Console -->
-        <section class="cyber-card config-panel">
-            <div class="cyber-corner corner-tl"></div>
-            <div class="cyber-corner corner-tr"></div>
-            <div class="cyber-corner corner-bl"></div>
-            <div class="cyber-corner corner-br"></div>
-
-            <div class="panel-header-row">
-                <div class="panel-title-wrap">
-                    <span class="panel-tag">// 01</span>
-                    <h2>TARGET ACQUISITION & ENGINE CONFIG</h2>
-                </div>
-                <div class="cyber-presets">
-                    <span class="presets-caption">MISSION PRESETS:</span>
-                    <button type="button" class="cyber-chip" onclick="setPreset('127.0.0.1', 'top-100', 'fast')">LOCAL 127.0.0.1</button>
-                    <button type="button" class="cyber-chip" onclick="setPreset('scanme.nmap.org', 'top-100', 'fast')">SCANME.NMAP.ORG</button>
-                    <button type="button" class="cyber-chip" onclick="setPreset('127.0.0.1', '80,443,3000,5000,8080', 'fast')">WEB STACK PORTS</button>
-                    <button type="button" class="cyber-chip chip-vuln" onclick="setPreset('scanme.nmap.org', '22,80,9929', 'vuln')">NMAP NSE VULN SCAN</button>
+    <main class="main-container">
+        <!-- Target & Configuration Panel -->
+        <section class="card config-card">
+            <div class="card-header">
+                <h2>🎯 Target Configuration</h2>
+                <div class="presets-row">
+                    <span class="preset-label">Quick Presets:</span>
+                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', 'top-100', 'fast')">Localhost (Top 100)</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', 'top-100', 'fast')">scanme.nmap.org</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('127.0.0.1', '80,443,3000,5000,8080', 'fast')">Dev Web Ports</button>
+                    <button type="button" class="preset-chip" onclick="setPreset('scanme.nmap.org', '22,80,9929', 'vuln')">Nmap Vuln Scan</button>
                 </div>
             </div>
 
-            <form id="scan-form" class="cyber-form" onsubmit="event.preventDefault(); startScan();">
-                <div class="cyber-form-grid">
-                    <div class="cyber-input-wrap">
-                        <label for="target-input"><span class="input-prefix">&gt;</span> TARGET IP / HOSTNAME</label>
-                        <div class="input-glow-box">
-                            <input type="text" id="target-input" placeholder="e.g. 192.168.1.1 or scanme.nmap.org" required value="127.0.0.1">
-                        </div>
+            <form id="scan-form" class="scan-form" onsubmit="event.preventDefault(); startScan();">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label for="target-input">Target Host / IP</label>
+                        <input type="text" id="target-input" placeholder="e.g. 127.0.0.1 or scanme.nmap.org" required value="127.0.0.1">
                     </div>
 
-                    <div class="cyber-input-wrap">
-                        <label for="ports-input"><span class="input-prefix">&gt;</span> TARGET PORTS MATRIX</label>
-                        <div class="input-glow-box">
-                            <input type="text" id="ports-input" placeholder="top-100, 1-1024, 80,443,8080" value="top-100">
-                        </div>
+                    <div class="input-group">
+                        <label for="ports-input">Ports Specification</label>
+                        <input type="text" id="ports-input" placeholder="top-100, 1-1024, 80,443,8080" value="top-100">
                     </div>
 
-                    <div class="cyber-input-wrap">
-                        <label for="mode-select"><span class="input-prefix">&gt;</span> RECON SCAN ENGINE</label>
-                        <div class="input-glow-box">
-                            <select id="mode-select">
-                                <option value="fast" selected>⚡ Ultra-Fast Async Socket Multiplexing</option>
-                                <option value="nmap">🔍 Nmap Deep Service & Version Fingerprint (-sV)</option>
-                                <option value="vuln">☣️ Nmap NSE Exploits & Vulnerability Scripts (--script vuln)</option>
-                                <option value="all">🛡️ Full Hybrid Threat Matrix (Async + Nmap + SSL + Web)</option>
-                            </select>
-                        </div>
+                    <div class="input-group">
+                        <label for="mode-select">Scanning Engine</label>
+                        <select id="mode-select">
+                            <option value="fast" selected>🚀 Ultra-Fast Async Connect (Native)</option>
+                            <option value="nmap">🔍 Nmap Deep Service & Version (-sV)</option>
+                            <option value="vuln">⚠️ Nmap NSE Vulnerability Scripts (--script vuln)</option>
+                            <option value="all">⚡ Hybrid Deep Recon (Async + Nmap + SSL + Web)</option>
+                        </select>
                     </div>
 
-                    <div class="cyber-input-wrap submit-wrap">
-                        <button type="submit" id="btn-start" class="cyber-btn-launch">
-                            <span class="btn-crosshair">✛</span>
-                            <span class="btn-text">ENGAGE SCAN</span>
-                            <span class="btn-glow-bar"></span>
+                    <div class="input-group submit-group">
+                        <button type="submit" id="btn-start" class="btn-primary">
+                            <span class="btn-icon">⚡</span> Launch Scan
                         </button>
                     </div>
                 </div>
             </form>
         </section>
 
-        <!-- Live Radar & Scanning Progress HUD -->
-        <section id="progress-section" class="cyber-card progress-panel" style="display: none;">
-            <div class="cyber-corner corner-tl"></div>
-            <div class="cyber-corner corner-tr"></div>
-            <div class="cyber-corner corner-bl"></div>
-            <div class="cyber-corner corner-br"></div>
-
-            <div class="radar-scan-flex">
-                <div class="cyber-radar">
-                    <div class="radar-circle radar-c1"></div>
-                    <div class="radar-circle radar-c2"></div>
-                    <div class="radar-circle radar-c3"></div>
-                    <div class="radar-crosshair-h"></div>
-                    <div class="radar-crosshair-v"></div>
-                    <div class="radar-sweep"></div>
-                </div>
-
-                <div class="progress-info-block">
-                    <div class="progress-labels">
-                        <div class="progress-title-tag">
-                            <span class="blink-tag">🔴 SCANNING</span>
-                            <span id="progress-status-text">Probing network interfaces...</span>
-                        </div>
-                        <div class="progress-percentage cyber-neon-cyan" id="progress-pct-text">0%</div>
-                    </div>
-                    <div class="cyber-progress-track">
-                        <div class="cyber-progress-fill" id="progress-bar-fill"></div>
-                    </div>
-                    <div class="progress-sub-stats">
-                        <span>DISCOVERED: <strong id="hud-live-open" class="cyber-neon-green">0</strong></span>
-                        <span>CHECKED: <strong id="hud-scanned-count">0</strong></span>
-                        <span>RECON THREADS: <strong class="cyber-neon-cyan">ACTIVE</strong></span>
-                    </div>
-                </div>
+        <!-- Live Scan Progress Bar -->
+        <section id="progress-section" class="card progress-card" style="display: none;">
+            <div class="progress-info">
+                <div class="progress-status" id="progress-status-text">Scanning target...</div>
+                <div class="progress-pct" id="progress-pct-text">0%</div>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-bar-fill"></div>
             </div>
         </section>
 
-        <!-- HUD Telemetry Metrics -->
-        <div class="telemetry-grid">
-            <div class="telemetry-card">
-                <div class="telemetry-corner"></div>
-                <div class="telemetry-val cyber-neon-green" id="stat-open-ports">0</div>
-                <div class="telemetry-title">OPEN PORTS DETECTED</div>
-                <div class="telemetry-meta">ACTIVE SERVICES</div>
+        <!-- Metric Stat Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-value" id="stat-open-ports">0</div>
+                <div class="metric-label">Open Ports</div>
             </div>
-            <div class="telemetry-card alert-card">
-                <div class="telemetry-corner"></div>
-                <div class="telemetry-val cyber-neon-red" id="stat-vulns">0</div>
-                <div class="telemetry-title">THREAT ALERTS</div>
-                <div class="telemetry-meta">CVE & EXPOSURE RISKS</div>
+            <div class="metric-card">
+                <div class="metric-value text-danger" id="stat-vulns">0</div>
+                <div class="metric-label">Security Alerts</div>
             </div>
-            <div class="telemetry-card">
-                <div class="telemetry-corner"></div>
-                <div class="telemetry-val cyber-neon-cyan" id="stat-latency">—</div>
-                <div class="telemetry-title">TARGET PING RTT</div>
-                <div class="telemetry-meta">ICMP / TCP PROBE</div>
+            <div class="metric-card">
+                <div class="metric-value text-info" id="stat-latency">—</div>
+                <div class="metric-label">Host Latency</div>
             </div>
-            <div class="telemetry-card">
-                <div class="telemetry-corner"></div>
-                <div class="telemetry-val cyber-neon-magenta" id="stat-duration">0.00s</div>
-                <div class="telemetry-title">EXECUTION TIME</div>
-                <div class="telemetry-meta">TOTAL RECON DURATION</div>
+            <div class="metric-card">
+                <div class="metric-value text-purple" id="stat-duration">0.0s</div>
+                <div class="metric-label">Scan Duration</div>
             </div>
         </div>
 
-        <!-- Tactical Export Bar -->
-        <div id="export-bar" class="cyber-export-bar" style="display: none;">
-            <div class="export-label-group">
-                <span class="export-icon">💾</span>
-                <div>
-                    <div class="export-main-text">EXPORT TACTICAL MISSION REPORT</div>
-                    <div class="export-sub-text">GENERATED EVIDENCE AND ARTIFACTS</div>
-                </div>
-            </div>
-            <div class="export-actions">
-                <button type="button" class="cyber-export-btn btn-html" onclick="exportReport('html')">
-                    <span>📄</span> INTERACTIVE HTML REPORT
-                </button>
-                <button type="button" class="cyber-export-btn btn-json" onclick="exportReport('json')">
-                    <span>📦</span> RAW JSON PAYLOAD
-                </button>
-                <button type="button" class="cyber-export-btn btn-csv" onclick="exportReport('csv')">
-                    <span>📊</span> CSV METRICS
-                </button>
+        <!-- Export Bar -->
+        <div id="export-bar" class="export-bar" style="display: none;">
+            <span class="export-label">Export Scan Report:</span>
+            <div class="export-buttons">
+                <button type="button" class="btn-export" onclick="exportReport('html')">📄 Standalone HTML</button>
+                <button type="button" class="btn-export" onclick="exportReport('json')">📦 JSON Data</button>
+                <button type="button" class="btn-export" onclick="exportReport('csv')">📊 CSV Spreadsheet</button>
             </div>
         </div>
 
-        <!-- Navigation HUD Tabs -->
-        <div class="cyber-tabs-nav">
-            <button type="button" class="cyber-tab active" onclick="switchTab('ports')">
-                <span class="tab-icon">⚡</span> OPEN PORTS (<span id="tab-ports-count">0</span>)
-            </button>
-            <button type="button" class="cyber-tab" onclick="switchTab('vulns')">
-                <span class="tab-icon">☣️</span> VULNERABILITIES & CVEs (<span id="tab-vulns-count">0</span>)
-            </button>
-            <button type="button" class="cyber-tab" onclick="switchTab('recon')">
-                <span class="tab-icon">🌐</span> RECON / SSL / WEB STACK
-            </button>
-            <button type="button" class="cyber-tab" onclick="switchTab('matrix')">
-                <span class="tab-icon">▦</span> LIVE PORT MATRIX HEATMAP
-            </button>
-            <button type="button" class="cyber-tab" onclick="switchTab('logs')">
-                <span class="tab-icon">📜</span> TACTICAL CONSOLE STREAM
-            </button>
+        <!-- Navigation Tabs for Results -->
+        <div class="tabs-nav">
+            <button type="button" class="tab-btn active" onclick="switchTab('ports')">🔌 Open Ports (<span id="tab-ports-count">0</span>)</button>
+            <button type="button" class="tab-btn" onclick="switchTab('vulns')">⚠️ Vulnerabilities (<span id="tab-vulns-count">0</span>)</button>
+            <button type="button" class="tab-btn" onclick="switchTab('recon')">🌐 Recon & SSL Info</button>
+            <button type="button" class="tab-btn" onclick="switchTab('logs')">📜 Live Console Logs</button>
         </div>
 
         <!-- Tab 1: Ports Table -->
-        <section id="tab-ports" class="cyber-tab-pane active">
-            <div class="cyber-card">
-                <div class="cyber-corner corner-tl"></div>
-                <div class="cyber-corner corner-tr"></div>
-                <div class="cyber-corner corner-bl"></div>
-                <div class="cyber-corner corner-br"></div>
-
-                <div class="table-container">
-                    <table class="cyber-table" id="ports-table">
+        <section id="tab-ports" class="tab-content active">
+            <div class="card">
+                <div class="table-responsive">
+                    <table class="data-table" id="ports-table">
                         <thead>
                             <tr>
-                                <th style="width: 120px;">PORT // PROTO</th>
-                                <th style="width: 110px;">STATE</th>
-                                <th style="width: 180px;">IDENTIFIED SERVICE</th>
-                                <th>SERVICE BANNER // NSE PAYLOAD</th>
-                                <th style="width: 120px;">LATENCY</th>
+                                <th style="width: 110px;">Port</th>
+                                <th style="width: 100px;">State</th>
+                                <th style="width: 170px;">Service</th>
+                                <th>Banner / Fingerprint</th>
+                                <th style="width: 120px;">Latency</th>
                             </tr>
                         </thead>
                         <tbody id="ports-tbody">
                             <tr>
-                                <td colspan="5" class="empty-cyber-cell">
-                                    <span class="empty-icon">⬡</span>
-                                    <div>READY FOR ENGAGEMENT. CONFIGURE TARGET ABOVE AND INITIATE SCAN.</div>
-                                </td>
+                                <td colspan="5" class="empty-state">No scan running. Configure target and click Launch Scan above.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -258,121 +156,54 @@
         </section>
 
         <!-- Tab 2: Vulnerabilities -->
-        <section id="tab-vulns" class="cyber-tab-pane">
-            <div class="cyber-card">
-                <div class="cyber-corner corner-tl"></div>
-                <div class="cyber-corner corner-tr"></div>
-                <div class="cyber-corner corner-bl"></div>
-                <div class="cyber-corner corner-br"></div>
+        <section id="tab-vulns" class="tab-content">
+            <div class="card" id="vulns-container">
+                <div class="empty-state">No security findings recorded yet.</div>
+            </div>
+        </section>
 
-                <div id="vulns-container">
-                    <div class="empty-cyber-cell">
-                        <span class="empty-icon">🛡️</span>
-                        <div>NO ACTIVE THREATS RECORDED. RUN A SCAN TO COMMENCE HEURISTIC AUDIT.</div>
+        <!-- Tab 3: Recon & SSL -->
+        <section id="tab-recon" class="tab-content">
+            <div class="recon-grid">
+                <div class="card">
+                    <h3>📡 DNS & Network Intelligence</h3>
+                    <div id="dns-info-box" class="recon-details">
+                        <p class="text-muted">Will populate once a scan is executed.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🔒 SSL/TLS Certificate Analysis</h3>
+                    <div id="ssl-info-box" class="recon-details">
+                        <p class="text-muted">SSL cert information (for HTTPS ports) appears here.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🌐 Web Server & Headers</h3>
+                    <div id="http-info-box" class="recon-details">
+                        <p class="text-muted">HTTP headers and web application fingerprinting details.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Tab 3: Recon, SSL & Web -->
-        <section id="tab-recon" class="cyber-tab-pane">
-            <div class="recon-cards-grid">
-                <div class="cyber-card">
-                    <div class="cyber-corner corner-tl"></div>
-                    <div class="cyber-corner corner-tr"></div>
-                    <div class="recon-box-header">
-                        <span class="recon-icon">📡</span>
-                        <h3>DNS & NETWORK ROUTING INTEL</h3>
-                    </div>
-                    <div id="dns-info-box" class="recon-data-list">
-                        <p class="cyber-muted">No DNS telemetry available yet.</p>
-                    </div>
+        <!-- Tab 4: Live Console Logs -->
+        <section id="tab-logs" class="tab-content">
+            <div class="card console-card">
+                <div class="console-header">
+                    <span>TERMINAL STREAM</span>
+                    <button type="button" class="btn-clear" onclick="clearLogs()">Clear</button>
                 </div>
-
-                <div class="cyber-card">
-                    <div class="cyber-corner corner-tl"></div>
-                    <div class="cyber-corner corner-tr"></div>
-                    <div class="recon-box-header">
-                        <span class="recon-icon">🔒</span>
-                        <h3>SSL / TLS CRYPTOGRAPHY AUDIT</h3>
-                    </div>
-                    <div id="ssl-info-box" class="recon-data-list">
-                        <p class="cyber-muted">SSL certificate telemetry will appear if port 443/8443 is open.</p>
-                    </div>
-                </div>
-
-                <div class="cyber-card">
-                    <div class="cyber-corner corner-tl"></div>
-                    <div class="cyber-corner corner-tr"></div>
-                    <div class="recon-box-header">
-                        <span class="recon-icon">🌐</span>
-                        <h3>HTTP WEB APPLICATION FINGERPRINT</h3>
-                    </div>
-                    <div id="http-info-box" class="recon-data-list">
-                        <p class="cyber-muted">Web headers, title tags, and server software signatures.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Tab 4: Live Port Matrix Heatmap -->
-        <section id="tab-matrix" class="cyber-tab-pane">
-            <div class="cyber-card">
-                <div class="cyber-corner corner-tl"></div>
-                <div class="cyber-corner corner-tr"></div>
-                <div class="cyber-corner corner-bl"></div>
-                <div class="cyber-corner corner-br"></div>
-
-                <div class="matrix-header-info">
-                    <div>
-                        <h3>TACTICAL PORT HEATMAP</h3>
-                        <p class="cyber-muted">Visual matrix of standard ports. Glowing green indicates confirmed open ports.</p>
-                    </div>
-                    <div class="matrix-legend">
-                        <span class="legend-item"><span class="legend-dot dot-open"></span> OPEN</span>
-                        <span class="legend-item"><span class="legend-dot dot-vuln"></span> VULNERABLE</span>
-                        <span class="legend-item"><span class="legend-dot dot-closed"></span> INACTIVE / FILTERED</span>
-                    </div>
-                </div>
-
-                <div id="port-matrix-grid" class="port-matrix-grid">
-                    <!-- Populated dynamically via JS -->
-                </div>
-            </div>
-        </section>
-
-        <!-- Tab 5: Live Terminal Console -->
-        <section id="tab-logs" class="cyber-tab-pane">
-            <div class="cyber-card terminal-box">
-                <div class="terminal-bar">
-                    <div class="terminal-dots">
-                        <span class="term-dot dot-red"></span>
-                        <span class="term-dot dot-yellow"></span>
-                        <span class="term-dot dot-green"></span>
-                    </div>
-                    <div class="terminal-title">ROOT@AEGIS-X:~/RECON/SCANNER.LOG</div>
-                    <button type="button" class="term-copy-btn" onclick="copyLogs()">COPY LOGS</button>
-                    <button type="button" class="term-copy-btn" onclick="clearLogs()">CLEAR</button>
-                </div>
-                <div class="terminal-body" id="terminal-logs">
-                    <div class="term-line"><span class="term-prompt">aegis@sec:~$</span> System initialized. Multi-engine scanner standby.</div>
+                <div class="console-terminal" id="terminal-logs">
+                    <div class="log-line"><span class="log-tag">[SYSTEM]</span> AegisScan Engine initialized. Ready to scan.</div>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="cyber-footer">
-        <div class="footer-grid">
-            <div>
-                <span class="cyber-neon-cyan">AEGIS-X PRO</span> // Network Reconnaissance Suite
-            </div>
-            <div class="cyber-muted">
-                Upgraded from <a href="https://github.com/Muhammedsinanrp/Port-Scanner" target="_blank" rel="noopener">Muhammedsinanrp/Port-Scanner</a> with Nmap & Async Sockets
-            </div>
-            <div class="footer-build">
-                BUILD: <strong>2.4.0-COMMERCIAL</strong>
-            </div>
-        </div>
+    <footer class="app-footer">
+        <p>AegisScan • Upgraded from <a href="https://github.com/Muhammedsinanrp/Port-Scanner" target="_blank" rel="noopener">Muhammedsinanrp/Port-Scanner</a> with Nmap & Async Multi-Engine architecture.</p>
     </footer>
 
     <script src="/static/js/app.js"></script>
